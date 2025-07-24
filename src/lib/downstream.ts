@@ -22,7 +22,7 @@ export async function searchFromApi(
   try {
     const apiBaseUrl = apiSite.api;
     const apiUrl =
-      apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query);
+      apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query) + '&include_adult=false';
     const apiName = apiSite.name;
 
     // 添加超时处理
@@ -107,7 +107,7 @@ export async function searchFromApi(
           apiBaseUrl +
           API_CONFIG.search.pagePath
             .replace('{query}', encodeURIComponent(query))
-            .replace('{page}', page.toString());
+            .replace('{page}', page.toString()) + '&include_adult=false';
 
         const pagePromise = (async () => {
           try {
