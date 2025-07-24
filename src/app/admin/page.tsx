@@ -127,9 +127,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
   const currentUsername = getAuthInfoFromBrowserCookie()?.username || null;
 
   // 检测存储类型是否为 d1
-  const isD1Storage =
-    typeof window !== 'undefined' &&
-    (window as any).RUNTIME_CONFIG?.STORAGE_TYPE === 'd1';
+  const isD1Storage = false;
 
   useEffect(() => {
     if (config?.UserConfig) {
