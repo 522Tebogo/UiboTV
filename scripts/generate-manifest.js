@@ -22,6 +22,7 @@ const manifestTemplate = {
   "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
+  "theme_color": "#000000", //  新加的
   "apple-mobile-web-app-capable": "yes",
   "apple-mobile-web-app-status-bar-style": "black",
   "icons": [
@@ -56,8 +57,8 @@ try {
 
   // 写入 manifest.json
   fs.writeFileSync(manifestPath, JSON.stringify(manifestTemplate, null, 2));
-  console.log(`✅ Generated manifest.json with site name: ${siteName}`);
+  console.log(` Generated manifest.json with site name: ${siteName}`);
 } catch (error) {
-  console.error('❌ Error generating manifest.json:', error);
+  console.error(' Error generating manifest.json:', error);
   process.exit(1);
 }
