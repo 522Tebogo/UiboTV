@@ -22,7 +22,7 @@ export async function searchFromApi(
   try {
     const apiBaseUrl = apiSite.api;
     const apiUrl =
-      apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query) + '&include_adult=false';
+      apiBaseUrl + API_CONFIG.search.path + encodeURIComponent(query);
     const apiName = apiSite.name;
 
     // 添加超时处理
@@ -49,8 +49,16 @@ export async function searchFromApi(
     ) {
       return [];
     }
-    // 处理第一页结果
-    const results = data.list.map((item: ApiSearchItem) => {
+    // --- 过滤代码开始 (第一处修改) ---
+    const forbiddenKeywords = ['伦理', '福利', '理论', '写真', '情色', '成人', '性爱'];
+    const filteredList = data.list.filter((item: ApiSearchItem) => {
+      const category = item.vod_class || item.type_name || '';
+      return !forbiddenKeywords.some((keyword) => category.includes(keyword));
+    });
+    // --- 过滤代码结束 ---
+
+    // 处理第一页结果 (使用过滤后的 filteredList)
+    const results = filteredList.map((item: ApiSearchItem) => {
       let episodes: string[] = [];
 
       // 使用正则表达式从 vod_play_url 提取 m3u8 链接
@@ -107,7 +115,7 @@ export async function searchFromApi(
           apiBaseUrl +
           API_CONFIG.search.pagePath
             .replace('{query}', encodeURIComponent(query))
-            .replace('{page}', page.toString()) + '&include_adult=false';
+            .replace('{page}', page.toString());
 
         const pagePromise = (async () => {
           try {
@@ -131,7 +139,15 @@ export async function searchFromApi(
             if (!pageData || !pageData.list || !Array.isArray(pageData.list))
               return [];
 
-            return pageData.list.map((item: ApiSearchItem) => {
+            // --- 过滤代码开始 (第二处修改) ---
+            const filteredPageList = pageData.list.filter((item: ApiSearchItem) => {
+              const category = item.vod_class || item.type_name || '';
+              return !forbiddenKeywords.some((keyword) => category.includes(keyword));
+            });
+            // --- 过滤代码结束 ---
+
+            // 使用过滤后的 filteredPageList
+            return filteredPageList.map((item: ApiSearchItem) => {
               let episodes: string[] = [];
 
               // 使用正则表达式从 vod_play_url 提取 m3u8 链接
