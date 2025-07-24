@@ -21,7 +21,7 @@ const manifestTemplate = {
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#df2525ff",
+  "background_color": "#ffffffff",
   "apple-mobile-web-app-capable": "yes",
   "apple-mobile-web-app-status-bar-style": "black",
   "icons": [
