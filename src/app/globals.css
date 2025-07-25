@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 这是一个您原来就有的工具类，用于在特定元素上隐藏滚动条，予以保留 */
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
@@ -17,12 +18,14 @@
   --foreground-rgb: 255, 255, 255;
 }
 
+/* --- 核心布局修复 --- */
 html,
 body {
-  height: 100%;
-  overflow-x: hidden;
-  /* 阻止 iOS Safari 拉动回弹 */
-  overscroll-behavior: none;
+  /* 下面这行 `height: 100%` 是导致页面无法滚动的关键原因之一，已将其删除 */
+  /* height: 100%; */
+  
+  overflow-x: hidden; /* 保留这个，可以防止水平滚动条出现 */
+  overscroll-behavior: none; /* 阻止 iOS Safari 的回弹效果 */
 }
 
 body {
@@ -41,25 +44,42 @@ html:not(.dark) body {
   );
   background-attachment: fixed;
 }
+/* --- 全局美化滚动条 v4 (“彩虹糖果”) --- */
 
-/* 自定义滚动条样式 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* 1. 轨道设置 */
+*::-webkit-scrollbar-track {
+  /* 使用与您网站类似的柔和渐变色系 */
+  background: linear-gradient(to bottom, #e0c3fc 0%, #8ec5fc 100%);
+  border-radius: 10px;
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.1);
+/* 2. 滚动条整体大小 */
+*::-webkit-scrollbar {
+  width: 10px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.3);
-  border-radius: 4px;
+/* 3. 滑块核心样式 */
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.6); /* 半透明的白色，营造“毛玻璃”效果 */
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  /* 模拟背景模糊效果 */
+  backdrop-filter: blur(5px); 
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.5);
+/* 4. 悬浮/激活时的效果 */
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.8); /* 悬浮时更不透明，更清晰 */
 }
+
+/* 5. 兼容 Firefox */
+* {
+  scrollbar-width: auto; /* auto 会比 thin 稍宽，更适合这个风格 */
+  /* Firefox 不支持透明感，给一个实体颜色 */
+  scrollbar-color: #a89be2 #d4e4f7; 
+}
+/* --- 您其他的自定义样式（予以保留） --- */
 
 /* 视频卡片悬停效果 */
 .video-card-hover {
@@ -77,30 +97,6 @@ html:not(.dark) body {
     rgba(0, 0, 0, 0) 0%,
     rgba(0, 0, 0, 0.8) 100%
   );
-}
-
-/* 隐藏移动端（<768px）垂直滚动条 */
-@media (max-width: 767px) {
-  html,
-  body {
-    -ms-overflow-style: none; /* IE & Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar {
-    display: none; /* Chrome Safari */
-  }
-}
-
-/* 隐藏所有滚动条（兼容 WebKit、Firefox、IE/Edge） */
-* {
-  -ms-overflow-style: none; /* IE & Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-*::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
 }
 
 /* View Transitions API 动画 */
@@ -129,38 +125,32 @@ html:not(.dark) body {
   animation-fill-mode: both;
 }
 
-/*
-  切换时，旧的视图不应该有动画，它应该在下面，等待被新的视图覆盖。
-  这可以防止在动画完成前，页面底部提前变色。
-*/
 ::view-transition-old(root) {
   animation: none;
 }
 
-/* 从浅色到深色：新内容（深色）从顶部滑入 */
 html.dark::view-transition-new(root) {
   animation-name: slide-from-top;
 }
 
-/* 从深色到浅色：新内容（浅色）从底部滑入 */
 html:not(.dark)::view-transition-new(root) {
   animation-name: slide-from-bottom;
 }
 
-/* 强制播放器内部的 video 元素高度为 100%，并保持内容完整显示 */
+/* 播放器相关样式 */
 div[data-media-provider] video {
   height: 100%;
   object-fit: contain;
 }
 
 .art-poster {
-  background-size: contain !important; /* 使图片完整展示 */
-  background-position: center center !important; /* 居中显示 */
-  background-repeat: no-repeat !important; /* 防止重复 */
-  background-color: #000 !important; /* 其余区域填充为黑色 */
+  background-size: contain !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-color: #000 !important;
 }
 
-/* 隐藏移动端竖屏时的 pip 按钮 */
+/* 播放器在移动端的UI调整 */
 @media (max-width: 768px) {
   .art-control-pip {
     display: none !important;
@@ -174,3 +164,4 @@ div[data-media-provider] video {
     display: none !important;
   }
 }
+
