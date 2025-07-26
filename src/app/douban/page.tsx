@@ -2,6 +2,8 @@
 
 'use client';
 
+import ScrollToTopButton from '@/components/ScrollToTopButton';
+
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -293,21 +295,21 @@ function DoubanPageClient() {
           <div className='grid grid-cols-3 gap-x-2 gap-y-12 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] sm:gap-x-8 sm:gap-y-20'>
             {loading || !selectorsReady
               ? // 显示骨架屏
-                skeletonData.map((index) => <DoubanCardSkeleton key={index} />)
+              skeletonData.map((index) => <DoubanCardSkeleton key={index} />)
               : // 显示实际数据
-                doubanData.map((item, index) => (
-                  <div key={`${item.title}-${index}`} className='w-full'>
-                    <VideoCard
-                      from='douban'
-                      title={item.title}
-                      poster={item.poster}
-                      douban_id={item.id}
-                      rate={item.rate}
-                      year={item.year}
-                      type={type === 'movie' ? 'movie' : ''} // 电影类型严格控制，tv 不控
-                    />
-                  </div>
-                ))}
+              doubanData.map((item, index) => (
+                <div key={`${item.title}-${index}`} className='w-full'>
+                  <VideoCard
+                    from='douban'
+                    title={item.title}
+                    poster={item.poster}
+                    douban_id={item.id}
+                    rate={item.rate}
+                    year={item.year}
+                    type={type === 'movie' ? 'movie' : ''} // 电影类型严格控制，tv 不控
+                  />
+                </div>
+              ))}
           </div>
 
           {/* 加载更多指示器 */}
@@ -342,6 +344,7 @@ function DoubanPageClient() {
           )}
         </div>
       </div>
+      <ScrollToTopButton />
     </PageLayout>
   );
 }

@@ -4,6 +4,7 @@
 
 'use client';
 
+import ScrollToTopButton from '@/components/ScrollToTopButton';
 
 
 import Artplayer from 'artplayer';
@@ -3308,6 +3309,7 @@ function PlayPageClient() {
         </div>
 
       </div>
+      <ScrollToTopButton />
 
     </PageLayout>
 

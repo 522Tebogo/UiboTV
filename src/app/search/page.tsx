@@ -4,6 +4,7 @@
 import { Search, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
+import ScrollToTopButton from '@/components/ScrollToTopButton';
 
 import {
   addSearchHistory,
@@ -48,9 +49,8 @@ function SearchPageClient() {
     const map = new Map<string, SearchResult[]>();
     searchResults.forEach((item) => {
       // 使用 title + year + type 作为键，year 必然存在，但依然兜底 'unknown'
-      const key = `${item.title.replaceAll(' ', '')}-${
-        item.year || 'unknown'
-      }-${item.episodes.length === 1 ? 'movie' : 'tv'}`;
+      const key = `${item.title.replaceAll(' ', '')}-${item.year || 'unknown'
+        }-${item.episodes.length === 1 ? 'movie' : 'tv'}`;
       const arr = map.get(key) || [];
       arr.push(item);
       map.set(key, arr);
@@ -239,44 +239,44 @@ function SearchPageClient() {
               >
                 {viewMode === 'agg'
                   ? aggregatedResults.map(([mapKey, group]) => {
-                      return (
-                        <div key={`agg-${mapKey}`} className='w-full'>
-                          <VideoCard
-                            from='search'
-                            items={group}
-                            query={
-                              searchQuery.trim() !== group[0].title
-                                ? searchQuery.trim()
-                                : ''
-                            }
-                          />
-                        </div>
-                      );
-                    })
-                  : searchResults.map((item) => (
-                      <div
-                        key={`all-${item.source}-${item.id}`}
-                        className='w-full'
-                      >
+                    return (
+                      <div key={`agg-${mapKey}`} className='w-full'>
                         <VideoCard
-                          id={item.id}
-                          title={item.title}
-                          poster={item.poster}
-                          episodes={item.episodes.length}
-                          source={item.source}
-                          source_name={item.source_name}
-                          douban_id={item.douban_id?.toString()}
+                          from='search'
+                          items={group}
                           query={
-                            searchQuery.trim() !== item.title
+                            searchQuery.trim() !== group[0].title
                               ? searchQuery.trim()
                               : ''
                           }
-                          year={item.year}
-                          from='search'
-                          type={item.episodes.length > 1 ? 'tv' : 'movie'}
                         />
                       </div>
-                    ))}
+                    );
+                  })
+                  : searchResults.map((item) => (
+                    <div
+                      key={`all-${item.source}-${item.id}`}
+                      className='w-full'
+                    >
+                      <VideoCard
+                        id={item.id}
+                        title={item.title}
+                        poster={item.poster}
+                        episodes={item.episodes.length}
+                        source={item.source}
+                        source_name={item.source_name}
+                        douban_id={item.douban_id?.toString()}
+                        query={
+                          searchQuery.trim() !== item.title
+                            ? searchQuery.trim()
+                            : ''
+                        }
+                        year={item.year}
+                        from='search'
+                        type={item.episodes.length > 1 ? 'tv' : 'movie'}
+                      />
+                    </div>
+                  ))}
                 {searchResults.length === 0 && (
                   <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
                     未找到相关结果
@@ -333,6 +333,8 @@ function SearchPageClient() {
           ) : null}
         </div>
       </div>
+      <ScrollToTopButton />
+
     </PageLayout>
   );
 }
