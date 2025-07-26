@@ -2154,7 +2154,7 @@ function PlayPageClient() {
 
         playbackRate: true,
 
-        aspectRatio: false,
+        aspectRatio: true,
 
         fullscreen: true,
 
@@ -2183,12 +2183,14 @@ function PlayPageClient() {
         autoOrientation: true,
 
         lock: true,
-        // 正确的代码
+
+
         gesture: true,
 
 
         moreVideoAttr: {
 
+          // 正确的代码
           crossOrigin: 'anonymous',
 
         },
@@ -2393,6 +2395,8 @@ function PlayPageClient() {
 
 
 
+
+
       // 监听播放器事件
 
       artPlayerRef.current.on('ready', () => {
@@ -2416,6 +2420,7 @@ function PlayPageClient() {
       artPlayerRef.current.on('video:canplay', () => {
 
         // 若存在需要恢复的播放进度，则跳转
+        console.log('ARTPLAYER DEBUG: "video:canplay" 事件触发，准备隐藏加载层。');
 
         if (resumeTimeRef.current && resumeTimeRef.current > 0) {
 
@@ -2474,6 +2479,7 @@ function PlayPageClient() {
 
 
       artPlayerRef.current.on('error', (err: any) => {
+        console.log('ARTPLAYER DEBUG: "error" 事件触发', err);
 
         console.error('播放器错误:', err);
 
