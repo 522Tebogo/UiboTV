@@ -288,16 +288,121 @@ function PlayPageClient() {
     console.log('播放源评分排序结果:');
     resultsWithScore.forEach((result, index) => {
       console.log(
-        `${index + 1}. ${
-          result.source.source_name
-        } - 评分: ${result.score.toFixed(2)} (${result.testResult.quality}, ${
-          result.testResult.loadSpeed
+        `${index + 1}. ${result.source.source_name
+        } - 评分: ${result.score.toFixed(2)} (${result.testResult.quality}, ${result.testResult.loadSpeed
         }, ${result.testResult.pingTime}ms)`
       );
     });
 
     return resultsWithScore[0].source;
   };
+
+  // =======================================================================
+  // Artplayer 手势控制插件 (新增)
+  // =======================================================================
+  function artplayerPluginGesture(art: Artplayer) {
+    // 仅在移动设备上启用此插件
+    if (!Artplayer.utils.isMobile) {
+      return;
+    }
+
+    const {
+      template: { $player, $video },
+    } = art;
+
+    let touchStart = { x: 0, y: 0 };
+    let touchType: 'volume' | 'brightness' | 'seek' | '' = '';
+    let startVolume = 0;
+    let startBrightness = 1; // 假设初始亮度为 1 (100%)
+
+    // 获取或设置播放器容器的当前亮度
+    function getBrightness(player: HTMLElement): number {
+      const filter = player.style.filter;
+      if (filter && filter.includes('brightness')) {
+        const match = filter.match(/brightness\((\d+(\.\d+)?)\)/);
+        return match ? parseFloat(match[1]) : 1;
+      }
+      return 1;
+    }
+
+    function setBrightness(player: HTMLElement, value: number) {
+      const clampedValue = Math.max(0.3, Math.min(2, value)); // 亮度范围 30% - 200%
+      player.style.filter = `brightness(${clampedValue})`;
+      art.notice.show = `亮度: ${Math.round(clampedValue * 100)}%`;
+    }
+
+
+    // 触摸开始
+    art.on('touchstart', (event: TouchEvent) => {
+      // 只处理单指触摸
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        touchStart = { x: touch.clientX, y: touch.clientY };
+        touchType = ''; // 重置触摸类型
+        startVolume = art.volume;
+        startBrightness = getBrightness($player);
+      }
+    });
+
+    // 触摸移动
+    art.on('touchmove', (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        event.preventDefault();
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - touchStart.x;
+        const deltaY = touch.clientY - touchStart.y;
+
+        // 首次移动时判断手势类型
+        if (touchType === '') {
+          if (Math.abs(deltaY) > Math.abs(deltaX)) {
+            // 垂直滑动
+            touchType = touchStart.x < $player.clientWidth / 2 ? 'brightness' : 'volume';
+          } else {
+            // 水平滑动
+            touchType = 'seek';
+          }
+        }
+
+        // 根据手势类型执行操作
+        switch (touchType) {
+          case 'volume': {
+            // 屏幕高度的 1/3 滑动距离 = 100% 音量变化
+            const volumeChangeFactor = ($player.clientHeight / 3);
+            const newVolume = startVolume - deltaY / volumeChangeFactor;
+            art.volume = Math.max(0, Math.min(1, newVolume));
+            break;
+          }
+          case 'brightness': {
+            // 屏幕高度的 1/3 滑动距离 = 100% 亮度变化 (即 1.0)
+            const brightnessChangeFactor = ($player.clientHeight / 3);
+            const newBrightness = startBrightness - deltaY / brightnessChangeFactor;
+            setBrightness($player, newBrightness);
+            break;
+          }
+          case 'seek': {
+            // Artplayer 默认处理水平滑动快进/快退，这里可以不实现或自定义
+            // 为避免冲突，此处不作处理
+            break;
+          }
+        }
+      }
+    });
+
+    // 触摸结束
+    art.on('touchend', () => {
+      if (touchType) {
+        // 延迟一段时间后隐藏提示
+        setTimeout(() => {
+          art.notice.show = '';
+        }, 500);
+        touchType = '';
+      }
+    });
+
+    return {
+      // 插件可以返回一个对象，这里我们不需要
+    };
+  }
 
   // 计算播放源综合评分
   const calculateSourceScore = (
@@ -501,13 +606,13 @@ function PlayPageClient() {
         const results = data.results.filter(
           (result: SearchResult) =>
             result.title.replaceAll(' ', '').toLowerCase() ===
-              videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
+            videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
             (videoYearRef.current
               ? result.year.toLowerCase() === videoYearRef.current.toLowerCase()
               : true) &&
             (searchType
               ? (searchType === 'tv' && result.episodes.length > 1) ||
-                (searchType === 'movie' && result.episodes.length === 1)
+              (searchType === 'movie' && result.episodes.length === 1)
               : true)
         );
         setAvailableSources(results);
@@ -1035,9 +1140,8 @@ function PlayPageClient() {
     // 非WebKit浏览器且播放器已存在，使用switch方法切换
     if (!isWebkit && artPlayerRef.current) {
       artPlayerRef.current.switch = videoUrl;
-      artPlayerRef.current.title = `${videoTitle} - 第${
-        currentEpisodeIndex + 1
-      }集`;
+      artPlayerRef.current.title = `${videoTitle} - 第${currentEpisodeIndex + 1
+        }集`;
       artPlayerRef.current.poster = videoCover;
       if (artPlayerRef.current?.video) {
         ensureVideoSource(
@@ -1327,30 +1431,27 @@ function PlayPageClient() {
             <div className='mb-6 w-80 mx-auto'>
               <div className='flex justify-center space-x-2 mb-4'>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                    loadingStage === 'searching' || loadingStage === 'fetching'
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'searching' || loadingStage === 'fetching'
                       ? 'bg-green-500 scale-125'
                       : loadingStage === 'preferring' ||
                         loadingStage === 'ready'
-                      ? 'bg-green-500'
-                      : 'bg-gray-300'
-                  }`}
+                        ? 'bg-green-500'
+                        : 'bg-gray-300'
+                    }`}
                 ></div>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                    loadingStage === 'preferring'
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'preferring'
                       ? 'bg-green-500 scale-125'
                       : loadingStage === 'ready'
-                      ? 'bg-green-500'
-                      : 'bg-gray-300'
-                  }`}
+                        ? 'bg-green-500'
+                        : 'bg-gray-300'
+                    }`}
                 ></div>
                 <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                    loadingStage === 'ready'
+                  className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'ready'
                       ? 'bg-green-500 scale-125'
                       : 'bg-gray-300'
-                  }`}
+                    }`}
                 ></div>
               </div>
 
@@ -1361,11 +1462,11 @@ function PlayPageClient() {
                   style={{
                     width:
                       loadingStage === 'searching' ||
-                      loadingStage === 'fetching'
+                        loadingStage === 'fetching'
                         ? '33%'
                         : loadingStage === 'preferring'
-                        ? '66%'
-                        : '100%',
+                          ? '66%'
+                          : '100%',
                   }}
                 ></div>
               </div>
@@ -1479,9 +1580,8 @@ function PlayPageClient() {
               }
             >
               <svg
-                className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
-                  isEpisodeSelectorCollapsed ? 'rotate-180' : 'rotate-0'
-                }`}
+                className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isEpisodeSelectorCollapsed ? 'rotate-180' : 'rotate-0'
+                  }`}
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -1499,27 +1599,24 @@ function PlayPageClient() {
 
               {/* 精致的状态指示点 */}
               <div
-                className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${
-                  isEpisodeSelectorCollapsed
+                className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${isEpisodeSelectorCollapsed
                     ? 'bg-orange-400 animate-pulse'
                     : 'bg-green-400'
-                }`}
+                  }`}
               ></div>
             </button>
           </div>
 
           <div
-            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${
-              isEpisodeSelectorCollapsed
+            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${isEpisodeSelectorCollapsed
                 ? 'grid-cols-1'
                 : 'grid-cols-1 md:grid-cols-4'
-            }`}
+              }`}
           >
             {/* 播放器 */}
             <div
-              className={`h-full transition-all duration-300 ease-in-out rounded-xl border border-white/0 dark:border-white/30 ${
-                isEpisodeSelectorCollapsed ? 'col-span-1' : 'md:col-span-3'
-              }`}
+              className={`h-full transition-all duration-300 ease-in-out rounded-xl border border-white/0 dark:border-white/30 ${isEpisodeSelectorCollapsed ? 'col-span-1' : 'md:col-span-3'
+                }`}
             >
               <div className='relative w-full h-[300px] lg:h-full'>
                 <div
@@ -1569,11 +1666,10 @@ function PlayPageClient() {
 
             {/* 选集和换源 - 在移动端始终显示，在 lg 及以上可折叠 */}
             <div
-              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
-                isEpisodeSelectorCollapsed
+              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${isEpisodeSelectorCollapsed
                   ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
                   : 'md:col-span-1 lg:opacity-100 lg:scale-100'
-              }`}
+                }`}
             >
               <EpisodeSelector
                 totalEpisodes={totalEpisodes}
@@ -1696,3 +1792,4 @@ export default function PlayPage() {
     </Suspense>
   );
 }
+
