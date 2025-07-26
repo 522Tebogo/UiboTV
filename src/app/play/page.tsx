@@ -1,4 +1,3 @@
-/// <reference path="../../types/artplayer.d.ts" />
 
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, no-console, @next/next/no-img-element */
 
