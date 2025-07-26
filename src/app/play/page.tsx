@@ -2176,7 +2176,7 @@ function PlayPageClient() {
 
         lang: 'zh-cn',
 
-        hotkey: false,
+        hotkey: true,
 
         fastForward: true,
 
