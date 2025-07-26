@@ -1,7 +1,10 @@
+/// <reference path="../../types/artplayer.d.ts" />
+
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, no-console, @next/next/no-img-element */
 
 'use client';
 
+// ... 文件的其余部分
 import Artplayer from 'artplayer';
 import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
