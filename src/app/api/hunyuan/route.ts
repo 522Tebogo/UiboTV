@@ -1,5 +1,5 @@
 // src/app/api/hunyuan/route.ts
-
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import * as tencentcloud from 'tencentcloud-sdk-nodejs';
 
