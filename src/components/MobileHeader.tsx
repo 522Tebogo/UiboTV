@@ -6,6 +6,7 @@ import { BackButton } from './BackButton';
 import { useSite } from './SiteProvider';
 import { ThemeToggle } from './ThemeToggle';
 import { UserMenu } from './UserMenu';
+import { AdminButton } from './AdminButton';
 
 interface MobileHeaderProps {
   showBackButton?: boolean;
@@ -19,8 +20,9 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
         {/* 左侧：返回按钮和设置按钮 */}
         <div className='flex items-center gap-2'>
           {showBackButton && <BackButton />}
-        </div>
+          <AdminButton />
 
+        </div>
         {/* 右侧按钮 */}
         <div className='flex items-center gap-2'>
           <ThemeToggle />

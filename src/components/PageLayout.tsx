@@ -4,6 +4,8 @@ import MobileHeader from './MobileHeader';
 import Sidebar from './Sidebar';
 import { ThemeToggle } from './ThemeToggle';
 import { UserMenu } from './UserMenu';
+import { AdminButton } from './AdminButton';
+
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -36,6 +38,7 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
           <div className='absolute top-2 right-4 z-20 hidden md:flex items-center gap-2'>
             <ThemeToggle />
             <UserMenu />
+            <AdminButton />
           </div>
 
           {/* 主内容 */}
@@ -53,6 +56,7 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
       {/* 移动端底部导航 */}
       <div className='md:hidden'>
         <MobileBottomNav activePath={activePath} />
+
       </div>
     </div>
   );
