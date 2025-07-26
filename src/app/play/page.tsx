@@ -2183,6 +2183,9 @@ function PlayPageClient() {
         autoOrientation: true,
 
         lock: true,
+        // 正确的代码
+        gesture: true,
+
 
         moreVideoAttr: {
 
@@ -2652,15 +2655,15 @@ function PlayPageClient() {
 
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'searching' || loadingStage === 'fetching'
 
-                      ? 'bg-green-500 scale-125'
+                    ? 'bg-green-500 scale-125'
 
-                      : loadingStage === 'preferring' ||
+                    : loadingStage === 'preferring' ||
 
-                        loadingStage === 'ready'
+                      loadingStage === 'ready'
 
-                        ? 'bg-green-500'
+                      ? 'bg-green-500'
 
-                        : 'bg-gray-300'
+                      : 'bg-gray-300'
 
                     }`}
 
@@ -2670,13 +2673,13 @@ function PlayPageClient() {
 
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'preferring'
 
-                      ? 'bg-green-500 scale-125'
+                    ? 'bg-green-500 scale-125'
 
-                      : loadingStage === 'ready'
+                    : loadingStage === 'ready'
 
-                        ? 'bg-green-500'
+                      ? 'bg-green-500'
 
-                        : 'bg-gray-300'
+                      : 'bg-gray-300'
 
                     }`}
 
@@ -2686,9 +2689,9 @@ function PlayPageClient() {
 
                   className={`w-3 h-3 rounded-full transition-all duration-500 ${loadingStage === 'ready'
 
-                      ? 'bg-green-500 scale-125'
+                    ? 'bg-green-500 scale-125'
 
-                      : 'bg-gray-300'
+                    : 'bg-gray-300'
 
                     }`}
 
@@ -2988,9 +2991,9 @@ function PlayPageClient() {
 
                 className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${isEpisodeSelectorCollapsed
 
-                    ? 'bg-orange-400 animate-pulse'
+                  ? 'bg-orange-400 animate-pulse'
 
-                    : 'bg-green-400'
+                  : 'bg-green-400'
 
                   }`}
 
@@ -3006,9 +3009,9 @@ function PlayPageClient() {
 
             className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${isEpisodeSelectorCollapsed
 
-                ? 'grid-cols-1'
+              ? 'grid-cols-1'
 
-                : 'grid-cols-1 md:grid-cols-4'
+              : 'grid-cols-1 md:grid-cols-4'
 
               }`}
 
@@ -3122,9 +3125,9 @@ function PlayPageClient() {
 
               className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${isEpisodeSelectorCollapsed
 
-                  ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
+                ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
 
-                  : 'md:col-span-1 lg:opacity-100 lg:scale-100'
+                : 'md:col-span-1 lg:opacity-100 lg:scale-100'
 
                 }`}
 
