@@ -1,6 +1,7 @@
 /* eslint-disable no-console,react-hooks/exhaustive-deps */
 
 'use client';
+import Chatbot from '@/components/Chatbot'; // 1. 导入组件
 
 import ScrollToTopButton from '@/components/ScrollToTopButton';
 
@@ -344,7 +345,10 @@ function DoubanPageClient() {
           )}
         </div>
       </div>
+
       <ScrollToTopButton />
+      <Chatbot />
+
     </PageLayout>
   );
 }

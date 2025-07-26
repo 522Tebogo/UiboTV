@@ -1,8 +1,7 @@
-// src/components/Chatbot.tsx
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, User, X } from 'lucide-react';
 
 interface Message {
@@ -11,10 +10,14 @@ interface Message {
 }
 
 export default function Chatbot() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', content: "Hello，Here's Hunyuan Uibo，What can I do for you？" },
+  ]);
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +35,6 @@ export default function Chatbot() {
         body: JSON.stringify({ message: input }),
       });
 
-      if (!response.ok) throw new Error('网络请求失败');
-
       const data = await response.json();
       const assistantMessage: Message = {
         role: 'assistant',
@@ -42,96 +43,126 @@ export default function Chatbot() {
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Chatbot Error:', error);
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: '发生错误，请稍后再试。' },
-      ]);
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: '发生错误，请稍后再试。',
+      }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition duration-200"
-        aria-label="打开聊天机器人"
-      >
-        <Bot size={24} />
-      </button>
-    );
-  }
+  // 自动滚动到底部
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border dark:border-gray-700 flex flex-col h-[70vh] overflow-hidden">
-      {/* Header */}
-      <div className="flex justify-between items-center px-4 py-3 bg-gray-100 dark:bg-gray-800 border-b dark:border-gray-700">
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">🎬 AI 影视助手</h3>
+    <>
+      {/* 圆形四色按钮 */}
+      {!isOpen && (
+
         <button
-          onClick={() => setIsOpen(false)}
-          className="text-gray-400 hover:text-red-500 transition"
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-[100px] right-6 z-50 p-4 rounded-full shadow-lg transition hover:scale-110 bg-gradient-to-br from-blue-500 via-red-400 to-green-400 text-white"
+          aria-label="打开聊天机器人"
         >
-          <X size={20} />
+          <Bot className="w-6 h-6 text-white drop-shadow" />
         </button>
-      </div>
 
-      {/* Message Area */}
-      <div className="flex-1 px-4 py-3 overflow-y-auto space-y-4 bg-gray-50 dark:bg-gray-900">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex items-start gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+      )}
+
+      {/* 聊天框 */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-[100px] right-6 z-50 w-[90vw] max-w-sm h-[70vh] flex flex-col rounded-3xl shadow-2xl bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 overflow-hidden"
           >
-            {msg.role === 'assistant' && (
-              <Bot className="w-6 h-6 text-green-500 mt-1" />
-            )}
+            {/* 顶部 */}
+            <div className="flex justify-between items-center px-5 py-4 border-b dark:border-neutral-700 bg-white dark:bg-neutral-900">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Hunyuan Uibo</h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-red-500 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* 消息区域 */}
             <div
-              className={`max-w-[75%] px-4 py-2 rounded-xl shadow-sm text-sm leading-relaxed break-words ${msg.role === 'user'
-                  ? 'bg-green-600 text-white rounded-br-none'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'
-                }`}
+              ref={chatRef}
+              className="flex-1 px-4 py-4 overflow-y-auto space-y-4 bg-neutral-50 dark:bg-neutral-900"
             >
-              {msg.content}
-            </div>
-            {msg.role === 'user' && (
-              <User className="w-6 h-6 text-gray-400 mt-1" />
-            )}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex items-start gap-2 justify-start">
-            <Bot className="w-6 h-6 text-green-500 mt-1" />
-            <div className="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 flex space-x-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse delay-200" />
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse delay-400" />
-            </div>
-          </div>
-        )}
-      </div>
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  {/* 头像 */}
+                  {msg.role === 'assistant' && (
+                    <div className="relative">
+                      <Bot className="w-7 h-7 text-blue-600" />
+                    </div>
+                  )}
+                  {/* 气泡 */}
+                  <div
+                    className={`px-4 py-2 text-sm rounded-3xl max-w-[75%] leading-snug ${msg.role === 'user'
+                      ? 'bg-blue-600 text-white rounded-br-sm'
+                      : 'bg-gray-200 dark:bg-neutral-800 text-gray-900 dark:text-gray-200 rounded-bl-sm'
+                      }`}
+                  >
+                    {msg.content}
+                  </div>
+                  {msg.role === 'user' && <User className="w-7 h-7 text-gray-400" />}
+                </div>
+              ))}
 
-      {/* Input Area */}
-      <div className="px-4 py-3 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="问我任何关于影视的问题..."
-            className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 transition"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white p-2 rounded-lg hover:from-green-600 hover:to-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send size={20} />
-          </button>
-        </form>
-      </div>
-    </div>
+              {/* AI 思考动画 */}
+              {isLoading && (
+                <div className="flex items-end gap-2">
+                  <div className="relative w-7 h-7">
+                    <span className="absolute inset-0 rounded-full bg-blue-400 opacity-75 animate-ping"></span>
+                    <Bot className="w-7 h-7 text-blue-600 relative z-10" />
+                  </div>
+                  <div className="px-4 py-2 text-sm rounded-3xl bg-gray-200 dark:bg-neutral-800 text-gray-900 dark:text-gray-200 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse delay-150" />
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse delay-300" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 输入框区域 */}
+            <div className="px-4 py-3 border-t border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
+              <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="说点什么..."
+                  className="flex-1 px-4 py-2 text-sm rounded-full bg-gray-100 dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  disabled={isLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || !input.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition disabled:opacity-50"
+                >
+                  <Send size={18} />
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
