@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   const params = {
     // 3. 构建发送给混元大模型的参数
-    Model: 'hunyuan-standard',
+    Model: 'hunyuan-turbos-latest',
     Messages: [{ Role: 'user', Content: message }],
     // 您可以根据需要调整其他参数，如 Temperature, TopP 等
   };
