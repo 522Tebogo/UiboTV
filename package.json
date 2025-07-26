@@ -31,9 +31,9 @@
     "@upstash/redis": "^1.25.0",
     "@vidstack/react": "^1.12.13",
     "artplayer": "^5.2.3",
-    "hls.js": "^1.6.6",
     "clsx": "^2.0.0",
     "framer-motion": "^12.18.1",
+    "hls.js": "^1.6.6",
     "lucide-react": "^0.438.0",
     "media-icons": "^1.1.5",
     "next": "^14.2.23",
@@ -46,6 +46,7 @@
     "sweetalert2": "^11.11.0",
     "swiper": "^11.2.8",
     "tailwind-merge": "^2.6.0",
+    "tencentcloud-sdk-nodejs": "^4.1.84",
     "vidstack": "^0.6.15",
     "zod": "^3.24.1"
   },
