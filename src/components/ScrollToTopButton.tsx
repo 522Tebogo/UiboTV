@@ -20,7 +20,7 @@ export default function ScrollToTopButton() {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 transition-opacity duration-300 ${isVisible ? 'opacity-100 animate-fadeInUp' : 'opacity-0 pointer-events-none'
+      className={`fixed bottom-16 right-6 z-50 transition-opacity duration-300 ${isVisible ? 'opacity-100 animate-fadeInUp' : 'opacity-0 pointer-events-none'
         }`}
     >
       <button

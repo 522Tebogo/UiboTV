@@ -66,7 +66,7 @@ export default function Chatbot() {
 
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-[100px] right-6 z-50 p-4 rounded-full shadow-lg transition hover:scale-110 bg-gradient-to-br from-blue-500 via-red-400 to-green-400 text-white"
+          className="fixed bottom-[140px] right-6 z-50 p-4 rounded-full shadow-lg transition hover:scale-110 bg-gradient-to-br from-blue-500 via-red-400 to-green-400 text-white"
           aria-label="打开聊天机器人"
         >
           <Bot className="w-6 h-6 text-white drop-shadow" />

@@ -16,6 +16,7 @@ import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import DoubanSelector from '@/components/DoubanSelector';
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
+import { color } from 'framer-motion';
 
 function DoubanPageClient() {
   const searchParams = useSearchParams();
@@ -344,10 +345,11 @@ function DoubanPageClient() {
             <div className='text-center text-gray-500 py-8'>暂无相关内容</div>
           )}
         </div>
+        <span>
+          <ScrollToTopButton />
+          <Chatbot />
+        </span>
       </div>
-
-      <ScrollToTopButton />
-      <Chatbot />
 
     </PageLayout>
   );
