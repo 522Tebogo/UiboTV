@@ -9,12 +9,13 @@
  * 功能：
  * 1. 获取全部播放记录（getAllPlayRecords）。
  * 2. 保存播放记录（savePlayRecord）。
- * 3. D1 存储模式下的混合缓存策略，提升用户体验。
+ * 3. 数据库存储模式下的混合缓存策略，提升用户体验。
  *
  * 如后续需要在客户端读取收藏等其它数据，可按同样方式在此文件中补充实现。
  */
 
 import { getAuthInfoFromBrowserCookie } from './auth';
+import { SkipConfig } from './types';
 
 // ---- 类型 ----
 export interface PlayRecord {
@@ -52,6 +53,7 @@ interface UserCacheStore {
   playRecords?: CacheData<Record<string, PlayRecord>>;
   favorites?: CacheData<Record<string, Favorite>>;
   searchHistory?: CacheData<string[]>;
+  skipConfigs?: CacheData<Record<string, SkipConfig>>;
 }
 
 // ---- 常量 ----
@@ -69,7 +71,12 @@ const STORAGE_TYPE = (() => {
   const raw =
     (typeof window !== 'undefined' &&
       (window as any).RUNTIME_CONFIG?.STORAGE_TYPE) ||
-    (process.env.STORAGE_TYPE as 'localstorage' | 'redis' | 'd1' | undefined) ||
+    (process.env.STORAGE_TYPE as
+      | 'localstorage'
+      | 'redis'
+      | 'd1'
+      | 'upstash'
+      | undefined) ||
     'localstorage';
   return raw;
 })();
@@ -244,6 +251,35 @@ class HybridCacheManager {
   }
 
   /**
+   * 获取缓存的跳过片头片尾配置
+   */
+  getCachedSkipConfigs(): Record<string, SkipConfig> | null {
+    const username = this.getCurrentUsername();
+    if (!username) return null;
+
+    const userCache = this.getUserCache(username);
+    const cached = userCache.skipConfigs;
+
+    if (cached && this.isCacheValid(cached)) {
+      return cached.data;
+    }
+
+    return null;
+  }
+
+  /**
+   * 缓存跳过片头片尾配置
+   */
+  cacheSkipConfigs(data: Record<string, SkipConfig>): void {
+    const username = this.getCurrentUsername();
+    if (!username) return;
+
+    const userCache = this.getUserCache(username);
+    userCache.skipConfigs = this.createCacheData(data);
+    this.saveUserCache(username, userCache);
+  }
+
+  /**
    * 清除指定用户的所有缓存
    */
   clearUserCache(username?: string): void {
@@ -379,7 +415,7 @@ export async function getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
     return {};
   }
 
-  // D1 存储模式：使用混合缓存策略
+  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 优先从缓存获取数据
     const cachedData = cacheManager.getCachedPlayRecords();
@@ -432,7 +468,7 @@ export async function getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
 
 /**
  * 保存播放记录。
- * D1 存储模式下使用乐观更新：先更新缓存（立即生效），再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存（立即生效），再异步同步到数据库。
  */
 export async function savePlayRecord(
   source: string,
@@ -441,7 +477,7 @@ export async function savePlayRecord(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
@@ -498,7 +534,7 @@ export async function savePlayRecord(
 
 /**
  * 删除播放记录。
- * D1 存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function deletePlayRecord(
   source: string,
@@ -506,7 +542,7 @@ export async function deletePlayRecord(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
@@ -561,7 +597,7 @@ export async function deletePlayRecord(
 
 /**
  * 获取搜索历史。
- * D1 存储模式下使用混合缓存策略：优先返回缓存数据，后台异步同步最新数据。
+ * 数据库存储模式下使用混合缓存策略：优先返回缓存数据，后台异步同步最新数据。
  */
 export async function getSearchHistory(): Promise<string[]> {
   // 服务器端渲染阶段直接返回空
@@ -569,7 +605,7 @@ export async function getSearchHistory(): Promise<string[]> {
     return [];
   }
 
-  // D1 存储模式：使用混合缓存策略
+  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 优先从缓存获取数据
     const cachedData = cacheManager.getCachedSearchHistory();
@@ -622,13 +658,13 @@ export async function getSearchHistory(): Promise<string[]> {
 
 /**
  * 将关键字添加到搜索历史。
- * D1 存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function addSearchHistory(keyword: string): Promise<void> {
   const trimmed = keyword.trim();
   if (!trimmed) return;
 
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedHistory = cacheManager.getCachedSearchHistory() || [];
@@ -685,10 +721,10 @@ export async function addSearchHistory(keyword: string): Promise<void> {
 
 /**
  * 清空搜索历史。
- * D1 存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function clearSearchHistory(): Promise<void> {
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     cacheManager.cacheSearchHistory([]);
@@ -724,13 +760,13 @@ export async function clearSearchHistory(): Promise<void> {
 
 /**
  * 删除单条搜索历史。
- * D1 存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function deleteSearchHistory(keyword: string): Promise<void> {
   const trimmed = keyword.trim();
   if (!trimmed) return;
 
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedHistory = cacheManager.getCachedSearchHistory() || [];
@@ -780,7 +816,7 @@ export async function deleteSearchHistory(keyword: string): Promise<void> {
 
 /**
  * 获取全部收藏。
- * D1 存储模式下使用混合缓存策略：优先返回缓存数据，后台异步同步最新数据。
+ * 数据库存储模式下使用混合缓存策略：优先返回缓存数据，后台异步同步最新数据。
  */
 export async function getAllFavorites(): Promise<Record<string, Favorite>> {
   // 服务器端渲染阶段直接返回空
@@ -788,7 +824,7 @@ export async function getAllFavorites(): Promise<Record<string, Favorite>> {
     return {};
   }
 
-  // D1 存储模式：使用混合缓存策略
+  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 优先从缓存获取数据
     const cachedData = cacheManager.getCachedFavorites();
@@ -841,7 +877,7 @@ export async function getAllFavorites(): Promise<Record<string, Favorite>> {
 
 /**
  * 保存收藏。
- * D1 存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function saveFavorite(
   source: string,
@@ -850,7 +886,7 @@ export async function saveFavorite(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedFavorites = cacheManager.getCachedFavorites() || {};
@@ -904,7 +940,7 @@ export async function saveFavorite(
 
 /**
  * 删除收藏。
- * D1 存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function deleteFavorite(
   source: string,
@@ -912,7 +948,7 @@ export async function deleteFavorite(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedFavorites = cacheManager.getCachedFavorites() || {};
@@ -962,7 +998,7 @@ export async function deleteFavorite(
 
 /**
  * 判断是否已收藏。
- * D1 存储模式下使用混合缓存策略：优先返回缓存数据，后台异步同步最新数据。
+ * 数据库存储模式下使用混合缓存策略：优先返回缓存数据，后台异步同步最新数据。
  */
 export async function isFavorited(
   source: string,
@@ -970,7 +1006,7 @@ export async function isFavorited(
 ): Promise<boolean> {
   const key = generateStorageKey(source, id);
 
-  // D1 存储模式：使用混合缓存策略
+  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     const cachedFavorites = cacheManager.getCachedFavorites();
 
@@ -1016,10 +1052,10 @@ export async function isFavorited(
 
 /**
  * 清空全部播放记录
- * D1 存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function clearAllPlayRecords(): Promise<void> {
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     cacheManager.cachePlayRecords({});
@@ -1057,10 +1093,10 @@ export async function clearAllPlayRecords(): Promise<void> {
 
 /**
  * 清空全部收藏
- * D1 存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function clearAllFavorites(): Promise<void> {
-  // D1 存储模式：乐观更新策略
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     cacheManager.cacheFavorites({});
@@ -1103,7 +1139,7 @@ export async function clearAllFavorites(): Promise<void> {
  * 用于用户登出时清理缓存
  */
 export function clearUserCache(): void {
-  if (STORAGE_TYPE === 'd1') {
+  if (STORAGE_TYPE !== 'localstorage') {
     cacheManager.clearUserCache();
   }
 }
@@ -1113,15 +1149,17 @@ export function clearUserCache(): void {
  * 强制从服务器重新获取数据并更新缓存
  */
 export async function refreshAllCache(): Promise<void> {
-  if (STORAGE_TYPE !== 'd1') return;
+  if (STORAGE_TYPE === 'localstorage') return;
 
   try {
     // 并行刷新所有数据
-    const [playRecords, favorites, searchHistory] = await Promise.allSettled([
-      fetchFromApi<Record<string, PlayRecord>>(`/api/playrecords`),
-      fetchFromApi<Record<string, Favorite>>(`/api/favorites`),
-      fetchFromApi<string[]>(`/api/searchhistory`),
-    ]);
+    const [playRecords, favorites, searchHistory, skipConfigs] =
+      await Promise.allSettled([
+        fetchFromApi<Record<string, PlayRecord>>(`/api/playrecords`),
+        fetchFromApi<Record<string, Favorite>>(`/api/favorites`),
+        fetchFromApi<string[]>(`/api/searchhistory`),
+        fetchFromApi<Record<string, SkipConfig>>(`/api/skipconfigs`),
+      ]);
 
     if (playRecords.status === 'fulfilled') {
       cacheManager.cachePlayRecords(playRecords.value);
@@ -1149,6 +1187,15 @@ export async function refreshAllCache(): Promise<void> {
         })
       );
     }
+
+    if (skipConfigs.status === 'fulfilled') {
+      cacheManager.cacheSkipConfigs(skipConfigs.value);
+      window.dispatchEvent(
+        new CustomEvent('skipConfigsUpdated', {
+          detail: skipConfigs.value,
+        })
+      );
+    }
   } catch (err) {
     console.error('刷新缓存失败:', err);
   }
@@ -1162,13 +1209,15 @@ export function getCacheStatus(): {
   hasPlayRecords: boolean;
   hasFavorites: boolean;
   hasSearchHistory: boolean;
+  hasSkipConfigs: boolean;
   username: string | null;
 } {
-  if (STORAGE_TYPE !== 'd1') {
+  if (STORAGE_TYPE === 'localstorage') {
     return {
       hasPlayRecords: false,
       hasFavorites: false,
       hasSearchHistory: false,
+      hasSkipConfigs: false,
       username: null,
     };
   }
@@ -1178,6 +1227,7 @@ export function getCacheStatus(): {
     hasPlayRecords: !!cacheManager.getCachedPlayRecords(),
     hasFavorites: !!cacheManager.getCachedFavorites(),
     hasSearchHistory: !!cacheManager.getCachedSearchHistory(),
+    hasSkipConfigs: !!cacheManager.getCachedSkipConfigs(),
     username: authInfo?.username || null,
   };
 }
@@ -1187,7 +1237,8 @@ export function getCacheStatus(): {
 export type CacheUpdateEvent =
   | 'playRecordsUpdated'
   | 'favoritesUpdated'
-  | 'searchHistoryUpdated';
+  | 'searchHistoryUpdated'
+  | 'skipConfigsUpdated';
 
 /**
  * 用于 React 组件监听数据更新的事件监听器
@@ -1224,11 +1275,16 @@ export function subscribeToDataUpdates<T>(
  * 适合在应用启动时调用，提升后续访问速度
  */
 export async function preloadUserData(): Promise<void> {
-  if (STORAGE_TYPE !== 'd1') return;
+  if (STORAGE_TYPE === 'localstorage') return;
 
   // 检查是否已有有效缓存，避免重复请求
   const status = getCacheStatus();
-  if (status.hasPlayRecords && status.hasFavorites && status.hasSearchHistory) {
+  if (
+    status.hasPlayRecords &&
+    status.hasFavorites &&
+    status.hasSearchHistory &&
+    status.hasSkipConfigs
+  ) {
     return;
   }
 
@@ -1236,4 +1292,199 @@ export async function preloadUserData(): Promise<void> {
   refreshAllCache().catch((err) => {
     console.warn('预加载用户数据失败:', err);
   });
+}
+
+// ---------------- 跳过片头片尾配置相关 API ----------------
+
+/**
+ * 获取跳过片头片尾配置。
+ * 数据库存储模式下使用混合缓存策略：优先返回缓存数据，后台异步同步最新数据。
+ */
+export async function getSkipConfig(
+  source: string,
+  id: string
+): Promise<SkipConfig | null> {
+  // 服务器端渲染阶段直接返回空
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const key = generateStorageKey(source, id);
+
+  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
+  if (STORAGE_TYPE !== 'localstorage') {
+    // 优先从缓存获取数据
+    const cachedData = cacheManager.getCachedSkipConfigs();
+
+    if (cachedData) {
+      // 返回缓存数据，同时后台异步更新
+      fetchFromApi<Record<string, SkipConfig>>(`/api/skipconfigs`)
+        .then((freshData) => {
+          // 只有数据真正不同时才更新缓存
+          if (JSON.stringify(cachedData) !== JSON.stringify(freshData)) {
+            cacheManager.cacheSkipConfigs(freshData);
+            // 触发数据更新事件
+            window.dispatchEvent(
+              new CustomEvent('skipConfigsUpdated', {
+                detail: freshData,
+              })
+            );
+          }
+        })
+        .catch((err) => {
+          console.warn('后台同步跳过片头片尾配置失败:', err);
+        });
+
+      return cachedData[key] || null;
+    } else {
+      // 缓存为空，直接从 API 获取并缓存
+      try {
+        const freshData = await fetchFromApi<Record<string, SkipConfig>>(
+          `/api/skipconfigs`
+        );
+        cacheManager.cacheSkipConfigs(freshData);
+        return freshData[key] || null;
+      } catch (err) {
+        console.error('获取跳过片头片尾配置失败:', err);
+        return null;
+      }
+    }
+  }
+
+  // localStorage 模式
+  try {
+    const raw = localStorage.getItem('moontv_skip_configs');
+    if (!raw) return null;
+    const configs = JSON.parse(raw) as Record<string, SkipConfig>;
+    return configs[key] || null;
+  } catch (err) {
+    console.error('读取跳过片头片尾配置失败:', err);
+    return null;
+  }
+}
+
+/**
+ * 保存跳过片头片尾配置。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ */
+export async function saveSkipConfig(
+  source: string,
+  id: string,
+  config: SkipConfig
+): Promise<void> {
+  const key = generateStorageKey(source, id);
+
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  if (STORAGE_TYPE !== 'localstorage') {
+    // 立即更新缓存
+    const cachedConfigs = cacheManager.getCachedSkipConfigs() || {};
+    cachedConfigs[key] = config;
+    cacheManager.cacheSkipConfigs(cachedConfigs);
+
+    // 触发立即更新事件
+    window.dispatchEvent(
+      new CustomEvent('skipConfigsUpdated', {
+        detail: cachedConfigs,
+      })
+    );
+
+    // 异步同步到数据库
+    try {
+      const res = await fetch('/api/skipconfigs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key, config }),
+      });
+      if (!res.ok) throw new Error(`保存跳过片头片尾配置失败: ${res.status}`);
+    } catch (err) {
+      console.error('保存跳过片头片尾配置失败:', err);
+    }
+    return;
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') {
+    console.warn('无法在服务端保存跳过片头片尾配置到 localStorage');
+    return;
+  }
+
+  try {
+    const raw = localStorage.getItem('moontv_skip_configs');
+    const configs = raw ? (JSON.parse(raw) as Record<string, SkipConfig>) : {};
+    configs[key] = config;
+    localStorage.setItem('moontv_skip_configs', JSON.stringify(configs));
+    window.dispatchEvent(
+      new CustomEvent('skipConfigsUpdated', {
+        detail: configs,
+      })
+    );
+  } catch (err) {
+    console.error('保存跳过片头片尾配置失败:', err);
+    throw err;
+  }
+}
+
+/**
+ * 删除跳过片头片尾配置。
+ * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
+ */
+export async function deleteSkipConfig(
+  source: string,
+  id: string
+): Promise<void> {
+  const key = generateStorageKey(source, id);
+
+  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  if (STORAGE_TYPE !== 'localstorage') {
+    // 立即更新缓存
+    const cachedConfigs = cacheManager.getCachedSkipConfigs() || {};
+    delete cachedConfigs[key];
+    cacheManager.cacheSkipConfigs(cachedConfigs);
+
+    // 触发立即更新事件
+    window.dispatchEvent(
+      new CustomEvent('skipConfigsUpdated', {
+        detail: cachedConfigs,
+      })
+    );
+
+    // 异步同步到数据库
+    try {
+      const res = await fetch(
+        `/api/skipconfigs?key=${encodeURIComponent(key)}`,
+        {
+          method: 'DELETE',
+        }
+      );
+      if (!res.ok) throw new Error(`删除跳过片头片尾配置失败: ${res.status}`);
+    } catch (err) {
+      console.error('删除跳过片头片尾配置失败:', err);
+    }
+    return;
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') {
+    console.warn('无法在服务端删除跳过片头片尾配置到 localStorage');
+    return;
+  }
+
+  try {
+    const raw = localStorage.getItem('moontv_skip_configs');
+    if (raw) {
+      const configs = JSON.parse(raw) as Record<string, SkipConfig>;
+      delete configs[key];
+      localStorage.setItem('moontv_skip_configs', JSON.stringify(configs));
+      window.dispatchEvent(
+        new CustomEvent('skipConfigsUpdated', {
+          detail: configs,
+        })
+      );
+    }
+  } catch (err) {
+    console.error('删除跳过片头片尾配置失败:', err);
+    throw err;
+  }
 }
