@@ -10,7 +10,6 @@ export enum UpdateStatus {
   NO_UPDATE = 'no_update', // 无新版本
   FETCH_FAILED = 'fetch_failed', // 获取失败
 }
-
 // 远程版本检查URL配置
 const VERSION_CHECK_URLS = [
   'https://ghfast.top/raw.githubusercontent.com/senshinya/MoonTV/main/VERSION.txt',
