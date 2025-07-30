@@ -81,5 +81,47 @@
       "api": "https://zy.xmm.hk/api.php/provide/vod",
       "name": "小猫咪资源"
     }
-  }
+  },
+  "custom_category": [
+    {
+      "name": "豆瓣高分",
+      "type": "movie",
+      "query": "豆瓣高分"
+    },
+    {
+      "name": "冷门佳片",
+      "type": "movie",
+      "query": "冷门佳片"
+    },
+    {
+      "name": "华语电影",
+      "type": "movie",
+      "query": "华语"
+    },
+    {
+      "name": "华语影视",
+      "type": "tv",
+      "query": "国产剧"
+    },
+    {
+      "name": "英语电影",
+      "type": "movie",
+      "query": "英语"
+    },
+    {
+      "name": "美剧影视",
+      "type": "tv",
+      "query": "美剧"
+    },
+    {
+      "name": "港剧集合",
+      "type": "tv",
+      "query": "港剧"
+    },
+    {
+      "name": "日本动画",
+      "type": "tv",
+      "query": "日本动画"
+    }
+  ]
 }
