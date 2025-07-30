@@ -2,6 +2,9 @@
 
 import { MetadataRoute } from 'next'
 
+export const runtime = 'edge';
+
+
 // 这个函数定义了你网站的地图
 export default function sitemap(): MetadataRoute.Sitemap {
   // 返回一个包含你网站所有页面URL的数组
