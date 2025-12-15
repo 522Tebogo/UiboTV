@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, no-console */
 
 'use client';
-import Chatbot from '@/components/Chatbot'; // 1. 导入组件
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
@@ -18,6 +17,7 @@ import { DoubanItem } from '@/lib/types';
 
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
+import HeroCarousel from '@/components/HeroCarousel';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
@@ -150,9 +150,9 @@ function HomeClient() {
 
   return (
     <PageLayout>
-      <div className='px-2 sm:px-10 py-4 sm:py-8 overflow-visible'>
+      <div className='px-3 sm:px-6 lg:px-10 py-6 sm:py-10 overflow-visible min-h-screen bg-gradient-to-b from-gray-50/90 via-white to-gray-50/60 dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900'>
         {/* 顶部 Tab 切换 */}
-        <div className='mb-8 flex justify-center'>
+        <div className='mb-10 flex justify-center'>
           <CapsuleSwitch
             options={[
               { label: '首页', value: 'home' },
@@ -163,14 +163,17 @@ function HomeClient() {
           />
         </div>
 
-        <div className='max-w-[95%] mx-auto'>
+        <div className='max-w-7xl mx-auto'>
           {activeTab === 'favorites' ? (
             // 收藏夹视图
-            <section className='mb-8'>
-              <div className='mb-4 flex items-center justify-between'>
-                <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-                  我的收藏
-                </h2>
+            <section className='mb-12 lg:mb-16'>
+              <div className='mb-6 flex items-center justify-between'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-1 h-7 bg-gradient-to-b from-green-400 to-emerald-600 rounded-full shadow-sm shadow-green-500/30' />
+                  <h2 className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 dark:from-gray-100 dark:via-gray-200 dark:to-gray-300 bg-clip-text text-transparent'>
+                    我的收藏
+                  </h2>
+                </div>
                 {favoriteItems.length > 0 && (
                   <button
                     className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -183,7 +186,7 @@ function HomeClient() {
                   </button>
                 )}
               </div>
-              <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'>
+              <div className='grid grid-cols-3 gap-3 sm:gap-5 lg:gap-6 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7'>
                 {favoriteItems.map((item) => (
                   <div key={item.id + item.source} className='w-full'>
                     <VideoCard
@@ -204,15 +207,21 @@ function HomeClient() {
           ) : (
             // 首页视图
             <>
+              {/* 热门轮播图 */}
+              <HeroCarousel items={hotMovies} loading={loading} />
+
               {/* 继续观看 */}
               <ContinueWatching />
 
               {/* 热门电影 */}
-              <section className='mb-8'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-                    热门电影
-                  </h2>
+              <section className='mb-12 lg:mb-16'>
+                <div className='mb-6 flex items-center justify-between'>
+                  <div className='flex items-center gap-3'>
+                    <div className='w-1 h-7 bg-gradient-to-b from-green-400 to-emerald-600 rounded-full shadow-sm shadow-green-500/30' />
+                    <h2 className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 dark:from-gray-100 dark:via-gray-200 dark:to-gray-300 bg-clip-text text-transparent'>
+                      热门电影
+                    </h2>
+                  </div>
                   <Link
                     href='/douban?type=movie'
                     className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -256,11 +265,14 @@ function HomeClient() {
               </section>
 
               {/* 热门剧集 */}
-              <section className='mb-8'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-                    热门剧集
-                  </h2>
+              <section className='mb-12 lg:mb-16'>
+                <div className='mb-6 flex items-center justify-between'>
+                  <div className='flex items-center gap-3'>
+                    <div className='w-1 h-7 bg-gradient-to-b from-green-400 to-emerald-600 rounded-full shadow-sm shadow-green-500/30' />
+                    <h2 className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 dark:from-gray-100 dark:via-gray-200 dark:to-gray-300 bg-clip-text text-transparent'>
+                      热门剧集
+                    </h2>
+                  </div>
                   <Link
                     href='/douban?type=tv'
                     className='flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -338,8 +350,6 @@ function HomeClient() {
           </div>
         </div>
       )}
-      <Chatbot />
-
     </PageLayout>
   );
 }

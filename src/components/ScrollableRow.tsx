@@ -102,16 +102,23 @@ export default function ScrollableRow({
     >
       <div
         ref={containerRef}
-        className='flex space-x-6 overflow-x-auto scrollbar-hide py-1 sm:py-2 pb-12 sm:pb-14 px-4 sm:px-6'
+        className='flex space-x-4 sm:space-x-5 lg:space-x-6 overflow-x-auto scrollbar-hide py-2 sm:py-3 pb-8 sm:pb-10 px-2 sm:px-3'
         onScroll={checkScroll}
       >
         {children}
       </div>
+      {/* 左侧渐变遮罩 */}
+      {showLeftScroll && (
+        <div className='absolute left-0 top-0 bottom-12 w-8 sm:w-12 bg-gradient-to-r from-gray-50 dark:from-gray-900 to-transparent pointer-events-none z-[5]' />
+      )}
+      {/* 右侧渐变遮罩 */}
+      {showRightScroll && (
+        <div className='absolute right-0 top-0 bottom-12 w-8 sm:w-12 bg-gradient-to-l from-gray-50 dark:from-gray-900 to-transparent pointer-events-none z-[5]' />
+      )}
       {showLeftScroll && (
         <div
-          className={`hidden sm:flex absolute left-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={`hidden sm:flex absolute left-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'
+            }`}
           style={{
             background: 'transparent',
             pointerEvents: 'none', // 允许点击穿透
@@ -138,9 +145,8 @@ export default function ScrollableRow({
 
       {showRightScroll && (
         <div
-          className={`hidden sm:flex absolute right-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={`hidden sm:flex absolute right-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'
+            }`}
           style={{
             background: 'transparent',
             pointerEvents: 'none', // 允许点击穿透

@@ -86,11 +86,14 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
   };
 
   return (
-    <section className={`mb-8 ${className || ''}`}>
-      <div className='mb-4 flex items-center justify-between'>
-        <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-          继续观看
-        </h2>
+    <section className={`mb-12 lg:mb-16 ${className || ''}`}>
+      <div className='mb-6 flex items-center justify-between'>
+        <div className='flex items-center gap-3'>
+          <div className='w-1 h-7 bg-gradient-to-b from-green-400 to-emerald-600 rounded-full shadow-sm shadow-green-500/30' />
+          <h2 className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 dark:from-gray-100 dark:via-gray-200 dark:to-gray-300 bg-clip-text text-transparent'>
+            继续观看
+          </h2>
+        </div>
         {!loading && playRecords.length > 0 && (
           <button
             className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -106,48 +109,48 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
       <ScrollableRow>
         {loading
           ? // 加载状态显示灰色占位数据
-            Array.from({ length: 6 }).map((_, index) => (
+          Array.from({ length: 6 }).map((_, index) => (
+            <div
+              key={index}
+              className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+            >
+              <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
+                <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
+              </div>
+              <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
+              <div className='mt-1 h-3 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
+            </div>
+          ))
+          : // 显示真实数据
+          playRecords.map((record) => {
+            const { source, id } = parseKey(record.key);
+            return (
               <div
-                key={index}
+                key={record.key}
                 className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
               >
-                <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
-                  <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
-                </div>
-                <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
-                <div className='mt-1 h-3 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
+                <VideoCard
+                  id={id}
+                  title={record.title}
+                  poster={record.cover}
+                  year={record.year}
+                  source={source}
+                  source_name={record.source_name}
+                  progress={getProgress(record)}
+                  episodes={record.total_episodes}
+                  currentEpisode={record.index}
+                  query={record.search_title}
+                  from='playrecord'
+                  onDelete={() =>
+                    setPlayRecords((prev) =>
+                      prev.filter((r) => r.key !== record.key)
+                    )
+                  }
+                  type={record.total_episodes > 1 ? 'tv' : ''}
+                />
               </div>
-            ))
-          : // 显示真实数据
-            playRecords.map((record) => {
-              const { source, id } = parseKey(record.key);
-              return (
-                <div
-                  key={record.key}
-                  className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
-                >
-                  <VideoCard
-                    id={id}
-                    title={record.title}
-                    poster={record.cover}
-                    year={record.year}
-                    source={source}
-                    source_name={record.source_name}
-                    progress={getProgress(record)}
-                    episodes={record.total_episodes}
-                    currentEpisode={record.index}
-                    query={record.search_title}
-                    from='playrecord'
-                    onDelete={() =>
-                      setPlayRecords((prev) =>
-                        prev.filter((r) => r.key !== record.key)
-                      )
-                    }
-                    type={record.total_episodes > 1 ? 'tv' : ''}
-                  />
-                </div>
-              );
-            })}
+            );
+          })}
       </ScrollableRow>
     </section>
   );
