@@ -82,7 +82,7 @@ export default function HeroCarousel({ items, loading = false }: HeroCarouselPro
       >
         {carouselItems.map((item, index) => (
           <SwiperSlide key={item.id || index}>
-            <Link href={`/search?query=${encodeURIComponent(item.title)}`} className="block w-full h-full">
+            <Link href={`/play?title=${encodeURIComponent(item.title)}${item.year ? `&year=${item.year}` : ''}`} className="block w-full h-full">
               <div className="relative w-full h-full">
                 {/* 背景图片 */}
                 <div
