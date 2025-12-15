@@ -13,7 +13,6 @@ import 'swiper/css/effect-fade';
 import 'swiper/css/navigation';
 
 import { DoubanItem } from '@/lib/types';
-import { setRequestMeta } from 'next/dist/server/request-meta';
 
 interface HeroCarouselProps {
   items: DoubanItem[];
@@ -77,8 +76,8 @@ export default function HeroCarousel({ items, loading = false }: HeroCarouselPro
         }}
         loop={true}
         speed={800}
-        onSwiper={(swiper) => (swiperRef.current = swiper)}
-        onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
+        onSwiper={(swiper: SwiperType) => (swiperRef.current = swiper)}
+        onSlideChange={(swiper: SwiperType) => setActiveIndex(swiper.realIndex)}
         className="w-full h-full"
       >
         {carouselItems.map((item, index) => (
